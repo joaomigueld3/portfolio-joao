@@ -15,6 +15,7 @@ export default function Portfolio() {
       summary: "Engenheiro de software com experiência no desenvolvimento de soluções escaláveis e eficientes. Especializado em tecnologias como NodeJS (Javascript), AWS, MongoDB e MySQL. Experiência em Arquitetura de Sistemas, Código Limpo e resolução de problemas complexos.",
       location: "Brasil",
       downloadCv: "Baixar Currículo",
+      cvPath: "/curriculo-pt.pdf",
       nav: { about: "Sobre", exp: "Experiência", projects: "Projetos", contact: "Contato" },
       titles: { 
         about: "Sobre Mim", 
@@ -71,6 +72,7 @@ export default function Portfolio() {
       summary: "Software engineer with experience in developing scalable and efficient solutions. Specialized in technologies such as NodeJS (Javascript), AWS, MongoDB and MySQL. Experienced in System Architecture, Clean Code and solving complex problems.",
       location: "Brazil",
       downloadCv: "Download Resume",
+      cvPath: "/resume-en.pdf",
       nav: { about: "About", exp: "Experience", projects: "Projects", contact: "Contact" },
       titles: { 
         about: "About Me", 
@@ -214,7 +216,7 @@ export default function Portfolio() {
               <SocialBtn href="https://github.com/joaomigueld3" icon={<Github size={18} />} label="GitHub" />
               <SocialBtn href="https://linkedin.com/in/joaomigueld3" icon={<Linkedin size={18} />} label="LinkedIn" />
               <SocialBtn href="mailto:joaomigueld3@gmail.com" icon={<Mail size={18} />} label="Email" />
-              <a href="#" className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
+              <a href={t.cvPath} download className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
                 <Download size={18} /> {t.downloadCv}
               </a>
             </div>
