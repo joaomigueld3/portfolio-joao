@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Github, Linkedin, Mail, Code, ExternalLink, BookOpen, Globe, MapPin, Download,
   Star, GitFork, Activity as ActivityIcon
@@ -10,6 +10,10 @@ const GITHUB_USERNAME = "joaomigueld3";
 type GithubUser = {
   public_repos: number;
   followers: number;
+};
+
+type ContributionsResponse = {
+  total?: Record<string, number>;
 };
 
 type GithubRepo = {
@@ -42,17 +46,18 @@ function timeAgo(dateStr: string, lang: 'pt' | 'en') {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   if (days < 1) return lang === 'pt' ? "hoje" : "today";
-  if (days < 30) return lang === 'pt' ? `há ${days}d` : `${days}d ago`;
+  if (days < 30) return lang === 'pt' ? `há ${days} dia${days > 1 ? 's' : ''}` : `${days}d ago`;
   const months = Math.floor(days / 30);
-  if (months < 12) return lang === 'pt' ? `há ${months}mês(es)` : `${months}mo ago`;
+  if (months < 12) return lang === 'pt' ? `há ${months} ${months > 1 ? 'meses' : 'mês'}` : `${months}mo ago`;
   const years = Math.floor(months / 12);
-  return lang === 'pt' ? `há ${years}ano(s)` : `${years}y ago`;
+  return lang === 'pt' ? `há ${years} ano${years > 1 ? 's' : ''}` : `${years}y ago`;
 }
 
 export default function Portfolio() {
   const [lang, setLang] = useState<'pt' | 'en'>('pt');
   const [githubUser, setGithubUser] = useState<GithubUser | null>(null);
   const [repos, setRepos] = useState<GithubRepo[] | null>(null);
+  const [totalContributions, setTotalContributions] = useState<number | null>(null);
   const [githubError, setGithubError] = useState(false);
   const [projectSort, setProjectSort] = useState<'stars' | 'recent'>('stars');
 
@@ -68,6 +73,14 @@ export default function Portfolio() {
         setRepos(repoData);
       })
       .catch(() => setGithubError(true));
+
+    fetch(`https://github-contributions-api.jogruber.de/v4/${GITHUB_USERNAME}?y=all`, { signal: controller.signal })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then((contribData: ContributionsResponse) => {
+        const total = Object.values(contribData.total ?? {}).reduce((sum, n) => sum + n, 0);
+        setTotalContributions(total);
+      })
+      .catch(() => {});
 
     return () => controller.abort();
   }, []);
@@ -115,10 +128,9 @@ export default function Portfolio() {
       location: "Brasil",
       downloadCv: "Baixar Currículo",
       cvPath: "/curriculo-pt.pdf",
-      nav: { about: "Sobre", exp: "Experiência", projects: "Projetos", contact: "Contato" },
+      nav: { about: "Sobre", edu: "Formação", projects: "Projetos", contact: "Contato" },
       titles: {
         about: "Sobre Mim",
-        exp: "Histórico Profissional",
         edu: "Formação Acadêmica",
         projects: "Projetos & Autônomo",
         stack: "Stack",
@@ -126,42 +138,12 @@ export default function Portfolio() {
         contact: "Vamos Conversar?"
       },
       eyebrow: "OLÁ, EU SOU",
-      sectionNum: { about: "01 — SOBRE", exp: "02 — EXPERIÊNCIA", projects: "03 — PROJETOS", stack: "04 — STACK", activity: "05 — ATIVIDADE" },
-      stats: { repos: "Repositórios", stars: "Estrelas", followers: "Seguidores" },
+      sectionNum: { about: "01 — SOBRE", edu: "02 — FORMAÇÃO", projects: "03 — PROJETOS", stack: "04 — STACK", activity: "05 — ATIVIDADE" },
+      stats: { repos: "Repositórios", stars: "Estrelas", followers: "Seguidores", contributions: "Contribuições" },
       stackSubtitle: "Distribuição de linguagens direto da API do GitHub.",
       activitySubtitle: "Últimos repositórios atualizados.",
       sortLabels: { stars: "Mais Estrelados", recent: "Mais Recentes" },
       githubErrorMsg: "Não foi possível carregar os dados do GitHub agora.",
-      experience: [
-        {
-          company: "Revelatio Studio",
-          role: "Engenheiro de Software",
-          period: "08/2024 - 12/2024",
-          description: "Desenvolvi soluções para o Serur Advogados. Construí do zero uma aplicação WEB com OCR para consulta de OABs, assim como ferramentas de gestão financeira integrada ao Omie (ERP).",
-          tech: ["NodeJS", "Typescript", "Jest", "Docker", "MongoDB", "AWS"]
-        },
-        {
-          company: "Profissional Autônomo",
-          role: "Engenheiro de Software",
-          period: "05/2024 - Atual",
-          description: "Desenvolvedor independente full stack criando soluções diversas com foco em entrega de valor e agilidade.",
-          tech: ["NestJS", "React", "Flutter", "SQL", "Docker", "AWS"]
-        },
-        {
-          company: "Mobiis",
-          role: "Engenheiro de Software",
-          period: "07/2023 - 01/2024",
-          description: "Líder do backend no desenvolvimento de sistemas WEB B2B para comparação de preços no varejo. Trabalho direto com Product Owner.",
-          tech: ["NodeJS", "Typescript", "Docker", "SQL", "API REST"]
-        },
-        {
-          company: "Pitang Agile IT",
-          role: "Engenheiro de Software Trainee-Júnior",
-          period: "05/2022 - 04/2023",
-          description: "Membro do squad da DirecTV GO (streaming). Implementação de microsserviços de dados e aplicações para a Copa do Mundo do Qatar.",
-          tech: ["NodeJS", "Microservices", "AWS MSK/Lambda", "MongoDB"]
-        }
-      ],
       education: [
         {
           institution: "Universidade de Pernambuco",
@@ -181,10 +163,9 @@ export default function Portfolio() {
       location: "Brazil",
       downloadCv: "Download Resume",
       cvPath: "/resume-en.pdf",
-      nav: { about: "About", exp: "Experience", projects: "Projects", contact: "Contact" },
+      nav: { about: "About", edu: "Education", projects: "Projects", contact: "Contact" },
       titles: {
         about: "About Me",
-        exp: "Work Experience",
         edu: "Education",
         projects: "Projects & Freelance",
         stack: "Stack",
@@ -192,42 +173,12 @@ export default function Portfolio() {
         contact: "Let's Talk?"
       },
       eyebrow: "HELLO, I'M",
-      sectionNum: { about: "01 — ABOUT", exp: "02 — EXPERIENCE", projects: "03 — PROJECTS", stack: "04 — STACK", activity: "05 — ACTIVITY" },
-      stats: { repos: "Repos", stars: "Stars", followers: "Followers" },
+      sectionNum: { about: "01 — ABOUT", edu: "02 — EDUCATION", projects: "03 — PROJECTS", stack: "04 — STACK", activity: "05 — ACTIVITY" },
+      stats: { repos: "Repos", stars: "Stars", followers: "Followers", contributions: "Contributions" },
       stackSubtitle: "Language distribution, straight from the GitHub API.",
       activitySubtitle: "Recently pushed repositories.",
       sortLabels: { stars: "Top Starred", recent: "Most Recent" },
       githubErrorMsg: "Couldn't load GitHub data right now.",
-      experience: [
-        {
-          company: "Revelatio Studio",
-          role: "Software Engineer",
-          period: "08/2024 - 12/2024",
-          description: "Developed solutions for Serur Advogados. Built a WEB application from scratch with OCR for OAB consultation and financial tools integrated with Omie (ERP).",
-          tech: ["NodeJS", "Typescript", "Jest", "Docker", "MongoDB", "AWS"]
-        },
-        {
-          company: "Freelance / Autonomous",
-          role: "Software Engineer",
-          period: "05/2024 - Current",
-          description: "Full stack independent developer building diverse solutions with a focus on value delivery and agility.",
-          tech: ["NestJS", "React", "Flutter", "SQL", "Docker", "AWS"]
-        },
-        {
-          company: "Mobiis",
-          role: "Software Engineer",
-          period: "07/2023 - 01/2024",
-          description: "Backend leader in B2B web systems development for retail price comparison. Worked directly with the Product Owner.",
-          tech: ["NodeJS", "Typescript", "Docker", "SQL", "REST API"]
-        },
-        {
-          company: "Pitang Agile IT",
-          role: "Software Engineer Trainee-Junior",
-          period: "05/2022 - 04/2023",
-          description: "Member of the DirecTV GO streaming squad. Implemented data microservices and applications for the Qatar World Cup.",
-          tech: ["NodeJS", "Microservices", "AWS MSK/Lambda", "MongoDB"]
-        }
-      ],
       education: [
         {
           institution: "University of Pernambuco",
@@ -259,7 +210,7 @@ export default function Portfolio() {
           <div className="flex items-center gap-6">
             <nav className="hidden md:flex space-x-6 text-sm font-medium text-slate-600">
               <a href="#about" className="hover:text-indigo-600 transition">{t.nav.about}</a>
-              <a href="#experience" className="hover:text-indigo-600 transition">{t.nav.exp}</a>
+              <a href="#education" className="hover:text-indigo-600 transition">{t.nav.edu}</a>
               <a href="#projects" className="hover:text-indigo-600 transition">{t.nav.projects}</a>
             </nav>
 
@@ -278,7 +229,8 @@ export default function Portfolio() {
       <main className="max-w-5xl mx-auto px-6 pt-16 pb-24 space-y-24">
 
         {/* Hero / About Section */}
-        <section id="about" className="space-y-12">
+        <section id="about">
+        <Reveal className="space-y-12">
           <div className="flex flex-col md:flex-row items-center gap-12">
             {/* Foto Area */}
             <div className="relative group shrink-0">
@@ -324,64 +276,40 @@ export default function Portfolio() {
           </div>
 
           {/* Live GitHub Stats */}
-          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto md:mx-0">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-xl mx-auto md:mx-0">
             <StatCard value={githubUser?.public_repos ?? ownRepos.length} label={t.stats.repos} loading={!githubUser && !githubError} />
             <StatCard value={totalStars} label={t.stats.stars} loading={!repos && !githubError} />
             <StatCard value={githubUser?.followers} label={t.stats.followers} loading={!githubUser && !githubError} />
+            <StatCard value={totalContributions ?? undefined} label={t.stats.contributions} loading={totalContributions === null && !githubError} />
           </div>
+        </Reveal>
         </section>
 
-        {/* Experience Section */}
-        <section id="experience" className="grid md:grid-cols-[1fr_2fr] gap-12">
-          <div className="space-y-6">
-            <SectionEyebrow text={t.sectionNum.exp} />
-            <h3 className="text-3xl font-bold text-slate-900">{t.titles.exp}</h3>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <BookOpen className="text-indigo-600" size={20} />
-                {t.titles.edu}
-              </h4>
-              <div className="space-y-6">
-                {t.education.map((edu, idx) => (
-                  <div key={idx} className="border-l-2 border-slate-200 pl-4">
+        {/* Education Section */}
+        <section id="education">
+        <Reveal>
+          <SectionEyebrow text={t.sectionNum.edu} />
+          <h3 className="text-3xl font-bold text-slate-900 mb-8">{t.titles.edu}</h3>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-2xl">
+            <div className="space-y-6">
+              {t.education.map((edu, idx) => (
+                <div key={idx} className="border-l-2 border-slate-200 pl-4 flex items-start gap-3">
+                  <BookOpen className="text-indigo-600 shrink-0 mt-0.5" size={18} />
+                  <div>
                     <div className="text-sm font-bold text-slate-900">{edu.degree}</div>
                     <div className="text-xs font-medium text-indigo-600 mb-1">{edu.institution}</div>
                     <div className="text-xs text-slate-400">{edu.period}</div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
-
-          <div className="space-y-8">
-            {t.experience.map((exp, idx) => (
-              <div key={idx} className="group relative bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
-                  <div>
-                    <h4 className="text-xl font-bold text-slate-900">{exp.company}</h4>
-                    <p className="text-indigo-600 font-medium text-sm">{exp.role}</p>
-                  </div>
-                  <span className="text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1 rounded-full whitespace-nowrap">
-                    {exp.period}
-                  </span>
-                </div>
-                <p className="text-slate-600 leading-relaxed mb-4 text-sm">
-                  {exp.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {exp.tech.map((tech) => (
-                    <span key={tech} className="px-2 py-1 bg-slate-50 text-slate-600 text-xs font-semibold rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors cursor-default">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+        </Reveal>
         </section>
 
         {/* Projects Section (live from GitHub) */}
         <section id="projects">
+        <Reveal>
           <SectionEyebrow text={t.sectionNum.projects} />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
             <h3 className="text-3xl font-bold text-slate-900">{t.titles.projects}</h3>
@@ -457,11 +385,13 @@ export default function Portfolio() {
               ))}
             </div>
           )}
+        </Reveal>
         </section>
 
         {/* Stack Section (live from GitHub) */}
         {!githubError && (
           <section id="stack">
+          <Reveal>
             <SectionEyebrow text={t.sectionNum.stack} />
             <h3 className="text-3xl font-bold text-slate-900 mb-2">{t.titles.stack}</h3>
             <p className="text-slate-500 text-sm mb-8">{t.stackSubtitle}</p>
@@ -491,12 +421,14 @@ export default function Portfolio() {
                 ))}
               </div>
             )}
+          </Reveal>
           </section>
         )}
 
         {/* Activity Section (live from GitHub) */}
         {!githubError && (
           <section id="activity">
+          <Reveal>
             <SectionEyebrow text={t.sectionNum.activity} />
             <h3 className="text-3xl font-bold text-slate-900 mb-2">{t.titles.activity}</h3>
             <p className="text-slate-500 text-sm mb-8">{t.activitySubtitle}</p>
@@ -526,11 +458,13 @@ export default function Portfolio() {
                 ))}
               </div>
             )}
+          </Reveal>
           </section>
         )}
 
         {/* Contact CTA */}
-        <section id="contact" className="bg-slate-900 rounded-3xl p-12 text-center text-white relative overflow-hidden">
+        <section id="contact">
+        <Reveal className="bg-slate-900 rounded-3xl p-12 text-center text-white relative overflow-hidden">
           <div className="relative z-10 space-y-6">
             <h3 className="text-3xl font-bold">{t.titles.contact}</h3>
             <p className="text-slate-300 max-w-lg mx-auto">
@@ -544,6 +478,7 @@ export default function Portfolio() {
           </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600 rounded-full blur-3xl opacity-20 translate-y-1/2 -translate-x-1/2"></div>
+        </Reveal>
         </section>
 
       </main>
@@ -551,6 +486,36 @@ export default function Portfolio() {
       <footer className="text-center py-8 text-slate-400 text-sm border-t border-slate-200">
         <p>© {new Date().getFullYear()} João Miguel Descendente. Built with Next.js & Tailwind.</p>
       </footer>
+    </div>
+  );
+}
+
+function Reveal({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`}
+    >
+      {children}
     </div>
   );
 }
