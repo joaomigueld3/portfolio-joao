@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# João Miguel Descendente — Portfólio
 
-## Getting Started
+Portfólio pessoal construído com [Next.js](https://nextjs.org) e [Tailwind CSS](https://tailwindcss.com), bilíngue (PT/EN) e com dados de projetos, stack e atividade puxados ao vivo da API do GitHub.
 
-First, run the development server:
+## Funcionalidades
+
+- **Bilíngue**: toggle PT/EN em todo o conteúdo.
+- **Projetos ao vivo**: lista de repositórios do GitHub (`joaomigueld3`) com estrelas, forks e linguagem, com opção de ordenar por mais estrelados ou mais recentes.
+- **Estatísticas em tempo real**: repositórios, estrelas, seguidores e total de contribuições (via [github-contributions-api](https://github-contributions-api.jogruber.de)).
+- **Stack**: distribuição de linguagens calculada a partir dos repositórios públicos.
+- **Atividade recente**: últimos repositórios com push, atualizados automaticamente.
+- **Animações de entrada**: seções aparecem com fade/slide suave ao rolar a página (via `IntersectionObserver`).
+
+## Rodando localmente
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000) para ver o resultado. A página principal fica em [app/page.tsx](app/page.tsx).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack técnica
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- [Next.js](https://nextjs.org) (App Router)
+- [Tailwind CSS v4](https://tailwindcss.com)
+- [lucide-react](https://lucide.dev) para ícones
+- [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) com a fonte [Geist](https://vercel.com/font)
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O jeito mais simples de publicar é usando a [Vercel](https://vercel.com/new). Veja a [documentação de deploy do Next.js](https://nextjs.org/docs/app/building-your-application/deploying) para mais detalhes.
