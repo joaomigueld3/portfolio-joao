@@ -30,6 +30,13 @@ type GithubRepo = {
   pushed_at: string;
 };
 
+const STACK_CATEGORIES: { label: string; items: string[] }[] = [
+  { label: "frontend", items: ["React", "TypeScript", "Tailwind"] },
+  { label: "backend", items: ["NodeJS", "NestJS", "TypeScript"] },
+  { label: "mobile", items: ["Flutter", "Dart"] },
+  { label: "ops", items: ["Docker", "AWS", "Shell"] },
+];
+
 const LANGUAGE_COLORS: Record<string, string> = {
   TypeScript: "#3178c6",
   JavaScript: "#f1e05a",
@@ -87,11 +94,6 @@ export default function Portfolio() {
 
   const ownRepos = useMemo(() => (repos ?? []).filter(r => !r.fork), [repos]);
 
-  const totalStars = useMemo(
-    () => ownRepos.reduce((sum, r) => sum + r.stargazers_count, 0),
-    [ownRepos]
-  );
-
   const sortedProjects = useMemo(() => {
     const list = [...ownRepos];
     if (projectSort === 'stars') {
@@ -139,8 +141,9 @@ export default function Portfolio() {
       },
       eyebrow: "OLÁ, EU SOU",
       sectionNum: { about: "01 — SOBRE", edu: "02 — FORMAÇÃO", projects: "03 — PROJETOS", stack: "04 — STACK", activity: "05 — ATIVIDADE" },
-      stats: { repos: "Repositórios", stars: "Estrelas", followers: "Seguidores", contributions: "Contribuições" },
+      stats: { repos: "Repositórios", contributions: "Contribuições" },
       stackSubtitle: "Distribuição de linguagens direto da API do GitHub.",
+      stackCommand: `$ ${GITHUB_USERNAME} --stack`,
       activitySubtitle: "Últimos repositórios atualizados.",
       sortLabels: { stars: "Mais Estrelados", recent: "Mais Recentes" },
       githubErrorMsg: "Não foi possível carregar os dados do GitHub agora.",
@@ -174,8 +177,9 @@ export default function Portfolio() {
       },
       eyebrow: "HELLO, I'M",
       sectionNum: { about: "01 — ABOUT", edu: "02 — EDUCATION", projects: "03 — PROJECTS", stack: "04 — STACK", activity: "05 — ACTIVITY" },
-      stats: { repos: "Repos", stars: "Stars", followers: "Followers", contributions: "Contributions" },
+      stats: { repos: "Repos", contributions: "Contributions" },
       stackSubtitle: "Language distribution, straight from the GitHub API.",
+      stackCommand: `$ ${GITHUB_USERNAME} --stack`,
       activitySubtitle: "Recently pushed repositories.",
       sortLabels: { stars: "Top Starred", recent: "Most Recent" },
       githubErrorMsg: "Couldn't load GitHub data right now.",
@@ -230,7 +234,7 @@ export default function Portfolio() {
 
         {/* Hero / About Section */}
         <section id="about">
-        <Reveal className="space-y-12">
+        <Reveal>
           <div className="flex flex-col md:flex-row items-center gap-12">
             {/* Foto Area */}
             <div className="relative group shrink-0">
@@ -274,14 +278,6 @@ export default function Portfolio() {
               </div>
             </div>
           </div>
-
-          {/* Live GitHub Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-xl mx-auto md:mx-0">
-            <StatCard value={githubUser?.public_repos ?? ownRepos.length} label={t.stats.repos} loading={!githubUser && !githubError} />
-            <StatCard value={totalStars} label={t.stats.stars} loading={!repos && !githubError} />
-            <StatCard value={githubUser?.followers} label={t.stats.followers} loading={!githubUser && !githubError} />
-            <StatCard value={totalContributions ?? undefined} label={t.stats.contributions} loading={totalContributions === null && !githubError} />
-          </div>
         </Reveal>
         </section>
 
@@ -303,6 +299,12 @@ export default function Portfolio() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Live GitHub Stats */}
+          <div className="grid grid-cols-2 gap-4 max-w-xs mt-8">
+            <StatCard value={githubUser?.public_repos ?? ownRepos.length} label={t.stats.repos} loading={!githubUser && !githubError} />
+            <StatCard value={totalContributions ?? undefined} label={t.stats.contributions} loading={totalContributions === null && !githubError} />
           </div>
         </Reveal>
         </section>
@@ -393,7 +395,19 @@ export default function Portfolio() {
           <section id="stack">
           <Reveal>
             <SectionEyebrow text={t.sectionNum.stack} />
-            <h3 className="text-3xl font-bold text-slate-900 mb-2">{t.titles.stack}</h3>
+            <h3 className="text-3xl font-bold text-slate-900 mb-8">{t.titles.stack}</h3>
+
+            <div className="bg-slate-900 text-slate-100 rounded-2xl p-6 font-mono text-sm mb-10 overflow-x-auto">
+              <p className="text-emerald-400 mb-3">{t.stackCommand}</p>
+              {STACK_CATEGORIES.map((cat) => (
+                <p key={cat.label} className="whitespace-pre text-slate-300">
+                  <span className="text-indigo-400">{cat.label.padEnd(9, ' ')}</span>
+                  <span className="text-slate-500">{'→ '}</span>
+                  {cat.items.join(' · ')}
+                </p>
+              ))}
+            </div>
+
             <p className="text-slate-500 text-sm mb-8">{t.stackSubtitle}</p>
 
             {!repos && (
@@ -412,7 +426,7 @@ export default function Portfolio() {
                     </span>
                     <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-indigo-600 transition-all"
+                        className="h-full rounded-full bg-indigo-600 transition-all duration-1000"
                         style={{ width: `${pct}%`, backgroundColor: LANGUAGE_COLORS[language] ?? undefined }}
                       />
                     </div>
