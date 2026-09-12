@@ -505,14 +505,29 @@ export default function Portfolio() {
         <Reveal className="bg-slate-900 dark:bg-zinc-950 dark:border dark:border-lime-500/20 rounded-3xl p-12 text-center text-white relative overflow-hidden">
           <div className="relative z-10 space-y-6">
             <h3 className="text-3xl font-bold">{t.titles.contact}</h3>
-            <p className="text-slate-300 dark:text-zinc-400 max-w-lg mx-auto">
-              {lang === 'pt'
-                ? "Estou disponível para novas oportunidades."
-                : "I am available for new opportunities."}
-            </p>
-            <a href="mailto:joaomigueld3@gmail.com" className="inline-flex items-center gap-2 px-8 py-3 bg-white dark:bg-lime-400 text-slate-900 dark:text-black rounded-full font-bold hover:bg-indigo-50 dark:hover:bg-lime-300 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0">
-              <Mail size={18} /> joaomigueld3@gmail.com
-            </a>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <a href="mailto:joaomigueld3@gmail.com" className="inline-flex items-center gap-2 px-8 py-3 bg-white dark:bg-lime-400 text-slate-900 dark:text-black rounded-full font-bold hover:bg-indigo-50 dark:hover:bg-lime-300 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0">
+                <Mail size={18} /> joaomigueld3@gmail.com
+              </a>
+              <a
+                href="https://github.com/joaomigueld3"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3 bg-white/10 border border-white/20 text-white rounded-full hover:bg-white/20 hover:border-lime-400 hover:text-lime-400 hover:scale-110 hover:-translate-y-0.5 transition-all"
+                aria-label="GitHub"
+              >
+                <Github size={20} />
+              </a>
+              <a
+                href="https://linkedin.com/in/joaomigueld3"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3 bg-white/10 border border-white/20 text-white rounded-full hover:bg-white/20 hover:border-lime-400 hover:text-lime-400 hover:scale-110 hover:-translate-y-0.5 transition-all"
+                aria-label="LinkedIn"
+              >
+                <Linkedin size={20} />
+              </a>
+            </div>
           </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 dark:bg-lime-400 rounded-full blur-3xl opacity-20 dark:opacity-10 -translate-y-1/2 translate-x-1/2"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600 dark:bg-lime-500 rounded-full blur-3xl opacity-20 dark:opacity-10 translate-y-1/2 -translate-x-1/2"></div>
