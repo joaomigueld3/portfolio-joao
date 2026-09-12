@@ -1,8 +1,9 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTheme } from 'next-themes';
 import {
   Github, Linkedin, Mail, Code, ExternalLink, BookOpen, Globe, MapPin, Download,
-  Star, GitFork, Activity as ActivityIcon
+  Star, GitFork, Activity as ActivityIcon, Sun, Moon
 } from 'lucide-react';
 
 const GITHUB_USERNAME = "joaomigueld3";
@@ -67,6 +68,10 @@ export default function Portfolio() {
   const [totalContributions, setTotalContributions] = useState<number | null>(null);
   const [githubError, setGithubError] = useState(false);
   const [projectSort, setProjectSort] = useState<'stars' | 'recent'>('stars');
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -199,29 +204,48 @@ export default function Portfolio() {
   };
 
   const t = data[lang];
+  const isDark = mounted && resolvedTheme === 'dark';
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-800 dark:text-zinc-300 font-sans selection:bg-indigo-100 dark:selection:bg-lime-400/30 selection:text-indigo-900 dark:selection:text-lime-200 transition-colors duration-300">
 
       {/* Header Fixo */}
-      <header className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all">
+      <header className="bg-white/90 dark:bg-black/80 backdrop-blur-md shadow-sm dark:shadow-none dark:border-b dark:border-zinc-800 sticky top-0 z-50 transition-all">
         <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-             <Code className="text-indigo-600" />
-             <span className="font-bold text-lg tracking-tight">João Descendente<span className="text-indigo-600">.dev</span></span>
+          <div className="flex items-center gap-2 group">
+             <Code className="text-indigo-600 dark:text-lime-400 transition-transform group-hover:rotate-12" />
+             <span className="font-bold text-lg tracking-tight dark:text-zinc-100">João Descendente<span className="text-indigo-600 dark:text-lime-400">.dev</span></span>
           </div>
 
           <div className="flex items-center gap-6">
-            <nav className="hidden md:flex space-x-6 text-sm font-medium text-slate-600">
-              <a href="#about" className="hover:text-indigo-600 transition">{t.nav.about}</a>
-              <a href="#education" className="hover:text-indigo-600 transition">{t.nav.edu}</a>
-              <a href="#projects" className="hover:text-indigo-600 transition">{t.nav.projects}</a>
+            <nav className="hidden md:flex space-x-6 text-sm font-medium text-slate-600 dark:text-zinc-400">
+              <a href="#about" className="relative hover:text-indigo-600 dark:hover:text-lime-400 transition-colors group">
+                {t.nav.about}
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-indigo-600 dark:bg-lime-400 transition-all group-hover:w-full" />
+              </a>
+              <a href="#education" className="relative hover:text-indigo-600 dark:hover:text-lime-400 transition-colors group">
+                {t.nav.edu}
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-indigo-600 dark:bg-lime-400 transition-all group-hover:w-full" />
+              </a>
+              <a href="#projects" className="relative hover:text-indigo-600 dark:hover:text-lime-400 transition-colors group">
+                {t.nav.projects}
+                <span className="absolute -bottom-1 left-0 w-0 h-px bg-indigo-600 dark:bg-lime-400 transition-all group-hover:w-full" />
+              </a>
             </nav>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              className="p-2 rounded-full bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-slate-700 dark:text-lime-400 transition hover:scale-110 active:scale-95"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
 
             {/* Language Toggle */}
             <button
               onClick={() => setLang(lang === 'pt' ? 'en' : 'pt')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-800 text-xs font-bold text-slate-700 dark:text-zinc-300 transition hover:scale-105 active:scale-95"
             >
               <Globe size={14} />
               {lang === 'pt' ? 'EN' : 'PT'}
@@ -238,33 +262,33 @@ export default function Portfolio() {
           <div className="flex flex-col md:flex-row items-center gap-12">
             {/* Foto Area */}
             <div className="relative group shrink-0">
-              <div className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl relative z-10">
+              <div className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white dark:border-zinc-900 shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-[1.03]">
                 <img
                   src="https://github.com/joaomigueld3.png"
                   alt="João Miguel Descendente"
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                 />
               </div>
-              <div className="absolute inset-0 rounded-full bg-indigo-600 blur-2xl opacity-20 group-hover:opacity-30 transition -z-10 translate-y-4"></div>
+              <div className="absolute inset-0 rounded-full bg-indigo-600 dark:bg-lime-400 blur-2xl opacity-20 dark:opacity-30 group-hover:opacity-30 dark:group-hover:opacity-50 transition -z-10 translate-y-4"></div>
             </div>
 
             <div className="text-center md:text-left space-y-6 flex-1">
               <div className="space-y-2">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-xs font-mono font-bold tracking-widest text-indigo-600">
-                  <span className="w-6 h-px bg-indigo-600" /> {t.eyebrow}
+                <div className="flex items-center justify-center md:justify-start gap-2 text-xs font-mono font-bold tracking-widest text-indigo-600 dark:text-lime-400">
+                  <span className="w-6 h-px bg-indigo-600 dark:bg-lime-400" /> {t.eyebrow}
                 </div>
-                <div className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wide">
+                <div className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 dark:bg-lime-400/10 text-indigo-700 dark:text-lime-400 rounded-full text-xs font-bold uppercase tracking-wide">
                   <MapPin size={12} /> {t.location}
                 </div>
-                <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">
+                <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight">
                   João Miguel Descendente
                 </h1>
-                <h2 className="text-xl md:text-2xl text-indigo-600 font-mono font-medium">
+                <h2 className="text-xl md:text-2xl text-indigo-600 dark:text-lime-400 font-mono font-medium">
                   $ {t.role}
                 </h2>
               </div>
 
-              <p className="text-lg text-slate-600 leading-relaxed max-w-2xl">
+              <p className="text-lg text-slate-600 dark:text-zinc-400 leading-relaxed max-w-2xl">
                 {t.summary}
               </p>
 
@@ -272,7 +296,7 @@ export default function Portfolio() {
                 <SocialBtn href="https://github.com/joaomigueld3" icon={<Github size={18} />} label="GitHub" />
                 <SocialBtn href="https://linkedin.com/in/joaomigueld3" icon={<Linkedin size={18} />} label="LinkedIn" />
                 <SocialBtn href="mailto:joaomigueld3@gmail.com" icon={<Mail size={18} />} label="Email" />
-                <a href={t.cvPath} download className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
+                <a href={t.cvPath} download className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 dark:bg-lime-400 text-white dark:text-black rounded-full font-semibold hover:bg-indigo-700 dark:hover:bg-lime-300 transition-all shadow-lg shadow-indigo-200 dark:shadow-lime-500/20 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0">
                   <Download size={18} /> {t.downloadCv}
                 </a>
               </div>
@@ -285,16 +309,16 @@ export default function Portfolio() {
         <section id="education">
         <Reveal>
           <SectionEyebrow text={t.sectionNum.edu} />
-          <h3 className="text-3xl font-bold text-slate-900 mb-8">{t.titles.edu}</h3>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-2xl">
+          <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-8">{t.titles.edu}</h3>
+          <div className="bg-white dark:bg-zinc-950 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-zinc-800 max-w-2xl transition-all hover:shadow-md dark:hover:border-lime-400/20">
             <div className="space-y-6">
               {t.education.map((edu, idx) => (
-                <div key={idx} className="border-l-2 border-slate-200 pl-4 flex items-start gap-3">
-                  <BookOpen className="text-indigo-600 shrink-0 mt-0.5" size={18} />
+                <div key={idx} className="border-l-2 border-slate-200 dark:border-zinc-700 pl-4 flex items-start gap-3 transition-colors hover:border-indigo-400 dark:hover:border-lime-400">
+                  <BookOpen className="text-indigo-600 dark:text-lime-400 shrink-0 mt-0.5" size={18} />
                   <div>
-                    <div className="text-sm font-bold text-slate-900">{edu.degree}</div>
-                    <div className="text-xs font-medium text-indigo-600 mb-1">{edu.institution}</div>
-                    <div className="text-xs text-slate-400">{edu.period}</div>
+                    <div className="text-sm font-bold text-slate-900 dark:text-zinc-100">{edu.degree}</div>
+                    <div className="text-xs font-medium text-indigo-600 dark:text-lime-400 mb-1">{edu.institution}</div>
+                    <div className="text-xs text-slate-400 dark:text-zinc-500">{edu.period}</div>
                   </div>
                 </div>
               ))}
@@ -314,17 +338,17 @@ export default function Portfolio() {
         <Reveal>
           <SectionEyebrow text={t.sectionNum.projects} />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
-            <h3 className="text-3xl font-bold text-slate-900">{t.titles.projects}</h3>
-            <div className="flex bg-slate-100 rounded-full p-1 text-xs font-bold self-start">
+            <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{t.titles.projects}</h3>
+            <div className="flex bg-slate-100 dark:bg-zinc-900 rounded-full p-1 text-xs font-bold self-start">
               <button
                 onClick={() => setProjectSort('stars')}
-                className={`px-4 py-1.5 rounded-full transition ${projectSort === 'stars' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+                className={`px-4 py-1.5 rounded-full transition-all ${projectSort === 'stars' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-lime-400 shadow-sm' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}
               >
                 {t.sortLabels.stars}
               </button>
               <button
                 onClick={() => setProjectSort('recent')}
-                className={`px-4 py-1.5 rounded-full transition ${projectSort === 'recent' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+                className={`px-4 py-1.5 rounded-full transition-all ${projectSort === 'recent' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-lime-400 shadow-sm' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}
               >
                 {t.sortLabels.recent}
               </button>
@@ -332,36 +356,36 @@ export default function Portfolio() {
           </div>
 
           {githubError && (
-            <p className="text-sm text-slate-400 mb-6">{t.githubErrorMsg}</p>
+            <p className="text-sm text-slate-400 dark:text-zinc-500 mb-6">{t.githubErrorMsg}</p>
           )}
 
           {!repos && !githubError && (
             <div className="grid md:grid-cols-2 gap-6">
-              {[0, 1].map(i => <div key={i} className="h-40 rounded-2xl bg-slate-100 animate-pulse" />)}
+              {[0, 1].map(i => <div key={i} className="h-40 rounded-2xl bg-slate-100 dark:bg-zinc-900 animate-pulse" />)}
             </div>
           )}
 
           {repos && (
             <div className="grid md:grid-cols-2 gap-6">
               {sortedProjects.map((repo) => (
-                <div key={repo.id} className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all group">
+                <div key={repo.id} className="bg-white dark:bg-zinc-950 rounded-2xl border border-slate-200 dark:border-zinc-800 p-6 transition-all group hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-lime-500/5 dark:hover:border-lime-400/30">
                   <div className="flex justify-between items-start mb-4">
-                    <h4 className="text-lg font-bold text-slate-900">{repo.name}</h4>
-                    <div className="flex items-center gap-3 text-xs font-bold text-slate-500 shrink-0">
+                    <h4 className="text-lg font-bold text-slate-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-lime-400 transition-colors">{repo.name}</h4>
+                    <div className="flex items-center gap-3 text-xs font-bold text-slate-500 dark:text-zinc-500 shrink-0">
                       <span className="flex items-center gap-1"><Star size={13} /> {repo.stargazers_count}</span>
                       <span className="flex items-center gap-1"><GitFork size={13} /> {repo.forks_count}</span>
                     </div>
                   </div>
-                  <p className="text-slate-600 text-sm mb-6 min-h-[40px]">
+                  <p className="text-slate-600 dark:text-zinc-400 text-sm mb-6 min-h-[40px]">
                     {repo.description || (lang === 'pt' ? "Sem descrição." : "No description.")}
                   </p>
-                  <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
                     <div className="flex items-center gap-4">
                       <a
                         href={repo.html_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm font-semibold text-slate-600 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                        className="text-sm font-semibold text-slate-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-lime-400 flex items-center gap-1 transition-all hover:gap-2"
                       >
                         <Github size={16} /> Code
                       </a>
@@ -370,14 +394,14 @@ export default function Portfolio() {
                           href={repo.homepage}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-semibold text-slate-600 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                          className="text-sm font-semibold text-slate-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-lime-400 flex items-center gap-1 transition-all hover:gap-2"
                         >
                           <ExternalLink size={16} /> Live Demo
                         </a>
                       )}
                     </div>
                     {repo.language && (
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-zinc-500">
                         <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: LANGUAGE_COLORS[repo.language] ?? "#94a3b8" }} />
                         {repo.language}
                       </span>
@@ -395,42 +419,42 @@ export default function Portfolio() {
           <section id="stack">
           <Reveal>
             <SectionEyebrow text={t.sectionNum.stack} />
-            <h3 className="text-3xl font-bold text-slate-900 mb-8">{t.titles.stack}</h3>
+            <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-8">{t.titles.stack}</h3>
 
-            <div className="bg-slate-900 text-slate-100 rounded-2xl p-6 font-mono text-sm mb-10 overflow-x-auto">
-              <p className="text-emerald-400 mb-3">{t.stackCommand}</p>
+            <div className="bg-slate-900 dark:bg-zinc-950 dark:border dark:border-lime-500/20 text-slate-100 rounded-2xl p-6 font-mono text-sm mb-10 overflow-x-auto transition-shadow hover:shadow-lg dark:hover:shadow-lime-500/10">
+              <p className="text-emerald-400 dark:text-lime-400 mb-3">{t.stackCommand}</p>
               {STACK_CATEGORIES.map((cat) => (
-                <p key={cat.label} className="whitespace-pre text-slate-300">
-                  <span className="text-indigo-400">{cat.label.padEnd(9, ' ')}</span>
+                <p key={cat.label} className="whitespace-pre text-slate-300 dark:text-zinc-400">
+                  <span className="text-indigo-400 dark:text-lime-400">{cat.label.padEnd(9, ' ')}</span>
                   <span className="text-slate-500">{'→ '}</span>
                   {cat.items.join(' · ')}
                 </p>
               ))}
             </div>
 
-            <p className="text-slate-500 text-sm mb-8">{t.stackSubtitle}</p>
+            <p className="text-slate-500 dark:text-zinc-500 text-sm mb-8">{t.stackSubtitle}</p>
 
             {!repos && (
               <div className="space-y-3">
-                {[0, 1, 2].map(i => <div key={i} className="h-6 rounded-full bg-slate-100 animate-pulse" />)}
+                {[0, 1, 2].map(i => <div key={i} className="h-6 rounded-full bg-slate-100 dark:bg-zinc-900 animate-pulse" />)}
               </div>
             )}
 
             {repos && (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {languageStats.map(({ language, count, pct }) => (
-                  <div key={language} className="flex items-center gap-4">
-                    <span className="w-28 shrink-0 text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <div key={language} className="flex items-center gap-4 px-2 -mx-2 py-1.5 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-zinc-900">
+                    <span className="w-28 shrink-0 text-sm font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: LANGUAGE_COLORS[language] ?? "#94a3b8" }} />
                       {language}
                     </span>
-                    <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div className="flex-1 h-2.5 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-indigo-600 transition-all duration-1000"
+                        className="h-full rounded-full bg-indigo-600 dark:bg-lime-400 transition-all duration-1000"
                         style={{ width: `${pct}%`, backgroundColor: LANGUAGE_COLORS[language] ?? undefined }}
                       />
                     </div>
-                    <span className="w-16 shrink-0 text-right text-xs font-bold text-slate-400">{count} repo{count > 1 ? 's' : ''}</span>
+                    <span className="w-16 shrink-0 text-right text-xs font-bold text-slate-400 dark:text-zinc-500">{count} repo{count > 1 ? 's' : ''}</span>
                   </div>
                 ))}
               </div>
@@ -444,30 +468,30 @@ export default function Portfolio() {
           <section id="activity">
           <Reveal>
             <SectionEyebrow text={t.sectionNum.activity} />
-            <h3 className="text-3xl font-bold text-slate-900 mb-2">{t.titles.activity}</h3>
-            <p className="text-slate-500 text-sm mb-8">{t.activitySubtitle}</p>
+            <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{t.titles.activity}</h3>
+            <p className="text-slate-500 dark:text-zinc-500 text-sm mb-8">{t.activitySubtitle}</p>
 
             {!repos && (
               <div className="space-y-3">
-                {[0, 1, 2].map(i => <div key={i} className="h-12 rounded-xl bg-slate-100 animate-pulse" />)}
+                {[0, 1, 2].map(i => <div key={i} className="h-12 rounded-xl bg-slate-100 dark:bg-zinc-900 animate-pulse" />)}
               </div>
             )}
 
             {repos && (
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-100">
+              <div className="bg-white dark:bg-zinc-950 rounded-2xl border border-slate-100 dark:border-zinc-800 shadow-sm divide-y divide-slate-100 dark:divide-zinc-800 overflow-hidden">
                 {recentActivity.map((repo) => (
                   <a
                     key={repo.id}
                     href={repo.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+                    className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:pl-8 transition-all"
                   >
-                    <span className="flex items-center gap-3 text-sm font-semibold text-slate-800">
-                      <ActivityIcon size={15} className="text-indigo-600" />
+                    <span className="flex items-center gap-3 text-sm font-semibold text-slate-800 dark:text-zinc-200">
+                      <ActivityIcon size={15} className="text-indigo-600 dark:text-lime-400" />
                       {repo.name}
                     </span>
-                    <span className="text-xs font-bold text-slate-400">{timeAgo(repo.pushed_at, lang)}</span>
+                    <span className="text-xs font-bold text-slate-400 dark:text-zinc-500">{timeAgo(repo.pushed_at, lang)}</span>
                   </a>
                 ))}
               </div>
@@ -478,26 +502,26 @@ export default function Portfolio() {
 
         {/* Contact CTA */}
         <section id="contact">
-        <Reveal className="bg-slate-900 rounded-3xl p-12 text-center text-white relative overflow-hidden">
+        <Reveal className="bg-slate-900 dark:bg-zinc-950 dark:border dark:border-lime-500/20 rounded-3xl p-12 text-center text-white relative overflow-hidden">
           <div className="relative z-10 space-y-6">
             <h3 className="text-3xl font-bold">{t.titles.contact}</h3>
-            <p className="text-slate-300 max-w-lg mx-auto">
+            <p className="text-slate-300 dark:text-zinc-400 max-w-lg mx-auto">
               {lang === 'pt'
                 ? "Estou disponível para novas oportunidades."
                 : "I am available for new opportunities."}
             </p>
-            <a href="mailto:joaomigueld3@gmail.com" className="inline-flex items-center gap-2 px-8 py-3 bg-white text-slate-900 rounded-full font-bold hover:bg-indigo-50 transition">
+            <a href="mailto:joaomigueld3@gmail.com" className="inline-flex items-center gap-2 px-8 py-3 bg-white dark:bg-lime-400 text-slate-900 dark:text-black rounded-full font-bold hover:bg-indigo-50 dark:hover:bg-lime-300 transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0">
               <Mail size={18} /> joaomigueld3@gmail.com
             </a>
           </div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600 rounded-full blur-3xl opacity-20 translate-y-1/2 -translate-x-1/2"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600 dark:bg-lime-400 rounded-full blur-3xl opacity-20 dark:opacity-10 -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600 dark:bg-lime-500 rounded-full blur-3xl opacity-20 dark:opacity-10 translate-y-1/2 -translate-x-1/2"></div>
         </Reveal>
         </section>
 
       </main>
 
-      <footer className="text-center py-8 text-slate-400 text-sm border-t border-slate-200">
+      <footer className="text-center py-8 text-slate-400 dark:text-zinc-600 text-sm border-t border-slate-200 dark:border-zinc-900">
         <p>© {new Date().getFullYear()} João Miguel Descendente. Built with Next.js & Tailwind.</p>
       </footer>
     </div>
@@ -536,21 +560,21 @@ function Reveal({ children, className = "" }: { children: React.ReactNode; class
 
 function SectionEyebrow({ text }: { text: string }) {
   return (
-    <div className="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-indigo-600 mb-3">
-      <span className="w-6 h-px bg-indigo-600" /> {text}
+    <div className="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-indigo-600 dark:text-lime-400 mb-3">
+      <span className="w-6 h-px bg-indigo-600 dark:bg-lime-400" /> {text}
     </div>
   );
 }
 
 function StatCard({ value, label, loading }: { value?: number; label: string; loading: boolean }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
+    <div className="bg-white dark:bg-zinc-950 rounded-2xl border border-slate-100 dark:border-zinc-800 shadow-sm p-4 text-center transition-all hover:-translate-y-1 hover:shadow-md dark:hover:border-lime-400/30 cursor-default">
       {loading ? (
-        <div className="h-8 mb-1 rounded bg-slate-100 animate-pulse mx-auto w-12" />
+        <div className="h-8 mb-1 rounded bg-slate-100 dark:bg-zinc-800 animate-pulse mx-auto w-12" />
       ) : (
-        <div className="text-2xl font-extrabold text-indigo-600">{value ?? 0}</div>
+        <div className="text-2xl font-extrabold text-indigo-600 dark:text-lime-400">{value ?? 0}</div>
       )}
-      <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-zinc-500">{label}</div>
     </div>
   );
 }
@@ -561,7 +585,7 @@ function SocialBtn({ href, icon, label }: { href: string, icon: React.ReactNode,
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="p-3 bg-white border border-slate-200 text-slate-600 rounded-full hover:border-indigo-600 hover:text-indigo-600 hover:scale-110 transition-all shadow-sm"
+      className="p-3 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 rounded-full hover:border-indigo-600 dark:hover:border-lime-400 hover:text-indigo-600 dark:hover:text-lime-400 hover:scale-110 hover:-translate-y-0.5 transition-all shadow-sm"
       aria-label={label}
     >
       {icon}
