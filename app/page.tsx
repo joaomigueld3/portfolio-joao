@@ -207,10 +207,10 @@ export default function Portfolio() {
   const isDark = mounted && resolvedTheme === 'dark';
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-800 dark:text-zinc-300 font-sans selection:bg-indigo-100 dark:selection:bg-lime-400/30 selection:text-indigo-900 dark:selection:text-lime-200 transition-colors duration-300">
+    <div className="min-h-screen bg-sky-50 dark:bg-black text-slate-800 dark:text-zinc-300 font-sans selection:bg-indigo-100 dark:selection:bg-lime-400/30 selection:text-indigo-900 dark:selection:text-lime-200 transition-colors duration-300">
 
       {/* Header Fixo */}
-      <header className="bg-white/90 dark:bg-black/80 backdrop-blur-md shadow-sm dark:shadow-none dark:border-b dark:border-zinc-800 sticky top-0 z-50 transition-all">
+      <header className="bg-sky-50/90 dark:bg-black/80 backdrop-blur-md shadow-sm dark:shadow-none dark:border-b dark:border-zinc-800 sticky top-0 z-50 transition-all">
         <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2 group">
              <Code className="text-indigo-600 dark:text-lime-400 transition-transform group-hover:rotate-12" />
@@ -485,7 +485,7 @@ export default function Portfolio() {
                     href={repo.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:pl-8 transition-all"
+                    className="flex items-center justify-between px-6 py-4 hover:bg-sky-50 dark:hover:bg-zinc-900 hover:pl-8 transition-all"
                   >
                     <span className="flex items-center gap-3 text-sm font-semibold text-slate-800 dark:text-zinc-200">
                       <ActivityIcon size={15} className="text-indigo-600 dark:text-lime-400" />
