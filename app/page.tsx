@@ -1,12 +1,111 @@
 "use client";
-import React, { useState } from 'react';
-import { 
-  Github, Linkedin, Mail, Server, Database, Cloud, Code, 
-  ExternalLink, Layers, Users, BookOpen, Globe, MapPin, Download
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Github, Linkedin, Mail, Code, ExternalLink, BookOpen, Globe, MapPin, Download,
+  Star, GitFork, Activity as ActivityIcon
 } from 'lucide-react';
+
+const GITHUB_USERNAME = "joaomigueld3";
+
+type GithubUser = {
+  public_repos: number;
+  followers: number;
+};
+
+type GithubRepo = {
+  id: number;
+  name: string;
+  description: string | null;
+  html_url: string;
+  homepage: string | null;
+  language: string | null;
+  stargazers_count: number;
+  forks_count: number;
+  fork: boolean;
+  updated_at: string;
+  pushed_at: string;
+};
+
+const LANGUAGE_COLORS: Record<string, string> = {
+  TypeScript: "#3178c6",
+  JavaScript: "#f1e05a",
+  Python: "#3572A5",
+  Dart: "#00B4AB",
+  Shell: "#89e051",
+  HTML: "#e34c26",
+  CSS: "#563d7c",
+  Java: "#b07219",
+  Go: "#00ADD8",
+};
+
+function timeAgo(dateStr: string, lang: 'pt' | 'en') {
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days < 1) return lang === 'pt' ? "hoje" : "today";
+  if (days < 30) return lang === 'pt' ? `há ${days}d` : `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return lang === 'pt' ? `há ${months}mês(es)` : `${months}mo ago`;
+  const years = Math.floor(months / 12);
+  return lang === 'pt' ? `há ${years}ano(s)` : `${years}y ago`;
+}
 
 export default function Portfolio() {
   const [lang, setLang] = useState<'pt' | 'en'>('pt');
+  const [githubUser, setGithubUser] = useState<GithubUser | null>(null);
+  const [repos, setRepos] = useState<GithubRepo[] | null>(null);
+  const [githubError, setGithubError] = useState(false);
+  const [projectSort, setProjectSort] = useState<'stars' | 'recent'>('stars');
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    Promise.all([
+      fetch(`https://api.github.com/users/${GITHUB_USERNAME}`, { signal: controller.signal }).then(r => r.ok ? r.json() : Promise.reject()),
+      fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?per_page=100&sort=updated`, { signal: controller.signal }).then(r => r.ok ? r.json() : Promise.reject()),
+    ])
+      .then(([userData, repoData]) => {
+        setGithubUser(userData);
+        setRepos(repoData);
+      })
+      .catch(() => setGithubError(true));
+
+    return () => controller.abort();
+  }, []);
+
+  const ownRepos = useMemo(() => (repos ?? []).filter(r => !r.fork), [repos]);
+
+  const totalStars = useMemo(
+    () => ownRepos.reduce((sum, r) => sum + r.stargazers_count, 0),
+    [ownRepos]
+  );
+
+  const sortedProjects = useMemo(() => {
+    const list = [...ownRepos];
+    if (projectSort === 'stars') {
+      list.sort((a, b) => b.stargazers_count - a.stargazers_count);
+    } else {
+      list.sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime());
+    }
+    return list.slice(0, 6);
+  }, [ownRepos, projectSort]);
+
+  const languageStats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    ownRepos.forEach(r => {
+      if (r.language) counts[r.language] = (counts[r.language] ?? 0) + 1;
+    });
+    const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+    return Object.entries(counts)
+      .map(([language, count]) => ({ language, count, pct: Math.round((count / total) * 100) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [ownRepos]);
+
+  const recentActivity = useMemo(() => {
+    return [...ownRepos]
+      .sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime())
+      .slice(0, 6);
+  }, [ownRepos]);
 
   // --- DADOS (Baseados nos Currículos em Anexo) ---
   const data = {
@@ -17,13 +116,22 @@ export default function Portfolio() {
       downloadCv: "Baixar Currículo",
       cvPath: "/curriculo-pt.pdf",
       nav: { about: "Sobre", exp: "Experiência", projects: "Projetos", contact: "Contato" },
-      titles: { 
-        about: "Sobre Mim", 
-        exp: "Histórico Profissional", 
+      titles: {
+        about: "Sobre Mim",
+        exp: "Histórico Profissional",
         edu: "Formação Acadêmica",
         projects: "Projetos & Autônomo",
-        contact: "Vamos Conversar?" 
+        stack: "Stack",
+        activity: "Atividade Recente",
+        contact: "Vamos Conversar?"
       },
+      eyebrow: "OLÁ, EU SOU",
+      sectionNum: { about: "01 — SOBRE", exp: "02 — EXPERIÊNCIA", projects: "03 — PROJETOS", stack: "04 — STACK", activity: "05 — ATIVIDADE" },
+      stats: { repos: "Repositórios", stars: "Estrelas", followers: "Seguidores" },
+      stackSubtitle: "Distribuição de linguagens direto da API do GitHub.",
+      activitySubtitle: "Últimos repositórios atualizados.",
+      sortLabels: { stars: "Mais Estrelados", recent: "Mais Recentes" },
+      githubErrorMsg: "Não foi possível carregar os dados do GitHub agora.",
       experience: [
         {
           company: "Revelatio Studio",
@@ -74,13 +182,22 @@ export default function Portfolio() {
       downloadCv: "Download Resume",
       cvPath: "/resume-en.pdf",
       nav: { about: "About", exp: "Experience", projects: "Projects", contact: "Contact" },
-      titles: { 
-        about: "About Me", 
-        exp: "Work Experience", 
+      titles: {
+        about: "About Me",
+        exp: "Work Experience",
         edu: "Education",
         projects: "Projects & Freelance",
-        contact: "Let's Talk?" 
+        stack: "Stack",
+        activity: "Recent Activity",
+        contact: "Let's Talk?"
       },
+      eyebrow: "HELLO, I'M",
+      sectionNum: { about: "01 — ABOUT", exp: "02 — EXPERIENCE", projects: "03 — PROJECTS", stack: "04 — STACK", activity: "05 — ACTIVITY" },
+      stats: { repos: "Repos", stars: "Stars", followers: "Followers" },
+      stackSubtitle: "Language distribution, straight from the GitHub API.",
+      activitySubtitle: "Recently pushed repositories.",
+      sortLabels: { stars: "Top Starred", recent: "Most Recent" },
+      githubErrorMsg: "Couldn't load GitHub data right now.",
       experience: [
         {
           company: "Revelatio Studio",
@@ -128,29 +245,9 @@ export default function Portfolio() {
 
   const t = data[lang];
 
-  // Projetos manuais (mantidos para portfólio visual)
-  const projects = [
-    {
-      title: "ErgonBacklog",
-      desc_pt: "Ferramenta inteligente para criação automatizada de backlogs via prompts.",
-      desc_en: "Intelligent tool for automated backlog creation via user prompts.",
-      tech: ["AI Integration", "Web App"],
-      status: "Dev",
-      icon: <Layers className="text-indigo-600" size={24} />
-    },
-    {
-      title: "Team Sorter App",
-      desc_pt: "Aplicação web para sorteio e organização de times de futebol.",
-      desc_en: "Web application for sorting and organizing soccer teams.",
-      tech: ["React", "Logic"],
-      status: "Done",
-      icon: <Users className="text-emerald-600" size={24} />
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-indigo-100 selection:text-indigo-900">
-      
+
       {/* Header Fixo */}
       <header className="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all">
         <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -158,7 +255,7 @@ export default function Portfolio() {
              <Code className="text-indigo-600" />
              <span className="font-bold text-lg tracking-tight">João Descendente<span className="text-indigo-600">.dev</span></span>
           </div>
-          
+
           <div className="flex items-center gap-6">
             <nav className="hidden md:flex space-x-6 text-sm font-medium text-slate-600">
               <a href="#about" className="hover:text-indigo-600 transition">{t.nav.about}</a>
@@ -167,7 +264,7 @@ export default function Portfolio() {
             </nav>
 
             {/* Language Toggle */}
-            <button 
+            <button
               onClick={() => setLang(lang === 'pt' ? 'en' : 'pt')}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition"
             >
@@ -179,57 +276,66 @@ export default function Portfolio() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 pt-16 pb-24 space-y-24">
-        
+
         {/* Hero / About Section */}
-        <section id="about" className="flex flex-col md:flex-row items-center gap-12">
-          {/* Foto Area */}
-          <div className="relative group shrink-0">
-            <div className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl relative z-10">
-              {/* Usando GitHub Avatar como fallback inteligente */}
-              <img 
-                src="https://github.com/joaomigueld3.png" 
-                alt="João Miguel Descendente" 
-                className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-              />
+        <section id="about" className="space-y-12">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            {/* Foto Area */}
+            <div className="relative group shrink-0">
+              <div className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-2xl relative z-10">
+                <img
+                  src="https://github.com/joaomigueld3.png"
+                  alt="João Miguel Descendente"
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                />
+              </div>
+              <div className="absolute inset-0 rounded-full bg-indigo-600 blur-2xl opacity-20 group-hover:opacity-30 transition -z-10 translate-y-4"></div>
             </div>
-            <div className="absolute inset-0 rounded-full bg-indigo-600 blur-2xl opacity-20 group-hover:opacity-30 transition -z-10 translate-y-4"></div>
+
+            <div className="text-center md:text-left space-y-6 flex-1">
+              <div className="space-y-2">
+                <div className="flex items-center justify-center md:justify-start gap-2 text-xs font-mono font-bold tracking-widest text-indigo-600">
+                  <span className="w-6 h-px bg-indigo-600" /> {t.eyebrow}
+                </div>
+                <div className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wide">
+                  <MapPin size={12} /> {t.location}
+                </div>
+                <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">
+                  João Miguel Descendente
+                </h1>
+                <h2 className="text-xl md:text-2xl text-indigo-600 font-mono font-medium">
+                  $ {t.role}
+                </h2>
+              </div>
+
+              <p className="text-lg text-slate-600 leading-relaxed max-w-2xl">
+                {t.summary}
+              </p>
+
+              <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-2">
+                <SocialBtn href="https://github.com/joaomigueld3" icon={<Github size={18} />} label="GitHub" />
+                <SocialBtn href="https://linkedin.com/in/joaomigueld3" icon={<Linkedin size={18} />} label="LinkedIn" />
+                <SocialBtn href="mailto:joaomigueld3@gmail.com" icon={<Mail size={18} />} label="Email" />
+                <a href={t.cvPath} download className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
+                  <Download size={18} /> {t.downloadCv}
+                </a>
+              </div>
+            </div>
           </div>
 
-          <div className="text-center md:text-left space-y-6 flex-1">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-bold uppercase tracking-wide">
-                <MapPin size={12} /> {t.location}
-              </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">
-                João Miguel Descendente
-              </h1>
-              <h2 className="text-xl md:text-2xl text-indigo-600 font-medium">
-                {t.role}
-              </h2>
-            </div>
-            
-            <p className="text-lg text-slate-600 leading-relaxed max-w-2xl">
-              {t.summary}
-            </p>
-
-            <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-2">
-              <SocialBtn href="https://github.com/joaomigueld3" icon={<Github size={18} />} label="GitHub" />
-              <SocialBtn href="https://linkedin.com/in/joaomigueld3" icon={<Linkedin size={18} />} label="LinkedIn" />
-              <SocialBtn href="mailto:joaomigueld3@gmail.com" icon={<Mail size={18} />} label="Email" />
-              <a href={t.cvPath} download className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">
-                <Download size={18} /> {t.downloadCv}
-              </a>
-            </div>
+          {/* Live GitHub Stats */}
+          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto md:mx-0">
+            <StatCard value={githubUser?.public_repos ?? ownRepos.length} label={t.stats.repos} loading={!githubUser && !githubError} />
+            <StatCard value={totalStars} label={t.stats.stars} loading={!repos && !githubError} />
+            <StatCard value={githubUser?.followers} label={t.stats.followers} loading={!githubUser && !githubError} />
           </div>
         </section>
 
         {/* Experience Section */}
         <section id="experience" className="grid md:grid-cols-[1fr_2fr] gap-12">
           <div className="space-y-6">
-            <h3 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-              <span className="w-8 h-1 bg-indigo-600 rounded-full"></span>
-              {t.titles.exp}
-            </h3>
+            <SectionEyebrow text={t.sectionNum.exp} />
+            <h3 className="text-3xl font-bold text-slate-900">{t.titles.exp}</h3>
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
               <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <BookOpen className="text-indigo-600" size={20} />
@@ -274,48 +380,163 @@ export default function Portfolio() {
           </div>
         </section>
 
-        {/* Projects Section */}
+        {/* Projects Section (live from GitHub) */}
         <section id="projects">
-          <h3 className="text-3xl font-bold text-slate-900 mb-10 flex items-center gap-3">
-             <span className="w-8 h-1 bg-indigo-600 rounded-full"></span>
-             {t.titles.projects}
-          </h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            {projects.map((proj, idx) => (
-              <div key={idx} className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all group">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="p-3 bg-slate-50 rounded-xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    {proj.icon}
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
-                    {proj.status}
-                  </span>
-                </div>
-                <h4 className="text-lg font-bold text-slate-900 mb-2">{proj.title}</h4>
-                <p className="text-slate-600 text-sm mb-6 min-h-[40px]">
-                  {lang === 'pt' ? proj.desc_pt : proj.desc_en}
-                </p>
-                <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
-                  <a href="#" className="text-sm font-semibold text-slate-600 hover:text-indigo-600 flex items-center gap-1">
-                    <Github size={16} /> Code
-                  </a>
-                  <a href="#" className="text-sm font-semibold text-slate-600 hover:text-indigo-600 flex items-center gap-1">
-                    <ExternalLink size={16} /> Live Demo
-                  </a>
-                </div>
-              </div>
-            ))}
+          <SectionEyebrow text={t.sectionNum.projects} />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+            <h3 className="text-3xl font-bold text-slate-900">{t.titles.projects}</h3>
+            <div className="flex bg-slate-100 rounded-full p-1 text-xs font-bold self-start">
+              <button
+                onClick={() => setProjectSort('stars')}
+                className={`px-4 py-1.5 rounded-full transition ${projectSort === 'stars' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+              >
+                {t.sortLabels.stars}
+              </button>
+              <button
+                onClick={() => setProjectSort('recent')}
+                className={`px-4 py-1.5 rounded-full transition ${projectSort === 'recent' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
+              >
+                {t.sortLabels.recent}
+              </button>
+            </div>
           </div>
+
+          {githubError && (
+            <p className="text-sm text-slate-400 mb-6">{t.githubErrorMsg}</p>
+          )}
+
+          {!repos && !githubError && (
+            <div className="grid md:grid-cols-2 gap-6">
+              {[0, 1].map(i => <div key={i} className="h-40 rounded-2xl bg-slate-100 animate-pulse" />)}
+            </div>
+          )}
+
+          {repos && (
+            <div className="grid md:grid-cols-2 gap-6">
+              {sortedProjects.map((repo) => (
+                <div key={repo.id} className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all group">
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="text-lg font-bold text-slate-900">{repo.name}</h4>
+                    <div className="flex items-center gap-3 text-xs font-bold text-slate-500 shrink-0">
+                      <span className="flex items-center gap-1"><Star size={13} /> {repo.stargazers_count}</span>
+                      <span className="flex items-center gap-1"><GitFork size={13} /> {repo.forks_count}</span>
+                    </div>
+                  </div>
+                  <p className="text-slate-600 text-sm mb-6 min-h-[40px]">
+                    {repo.description || (lang === 'pt' ? "Sem descrição." : "No description.")}
+                  </p>
+                  <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-4">
+                      <a
+                        href={repo.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-semibold text-slate-600 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                      >
+                        <Github size={16} /> Code
+                      </a>
+                      {repo.homepage && (
+                        <a
+                          href={repo.homepage}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-semibold text-slate-600 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                        >
+                          <ExternalLink size={16} /> Live Demo
+                        </a>
+                      )}
+                    </div>
+                    {repo.language && (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: LANGUAGE_COLORS[repo.language] ?? "#94a3b8" }} />
+                        {repo.language}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
+
+        {/* Stack Section (live from GitHub) */}
+        {!githubError && (
+          <section id="stack">
+            <SectionEyebrow text={t.sectionNum.stack} />
+            <h3 className="text-3xl font-bold text-slate-900 mb-2">{t.titles.stack}</h3>
+            <p className="text-slate-500 text-sm mb-8">{t.stackSubtitle}</p>
+
+            {!repos && (
+              <div className="space-y-3">
+                {[0, 1, 2].map(i => <div key={i} className="h-6 rounded-full bg-slate-100 animate-pulse" />)}
+              </div>
+            )}
+
+            {repos && (
+              <div className="space-y-4">
+                {languageStats.map(({ language, count, pct }) => (
+                  <div key={language} className="flex items-center gap-4">
+                    <span className="w-28 shrink-0 text-sm font-bold text-slate-700 flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: LANGUAGE_COLORS[language] ?? "#94a3b8" }} />
+                      {language}
+                    </span>
+                    <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-indigo-600 transition-all"
+                        style={{ width: `${pct}%`, backgroundColor: LANGUAGE_COLORS[language] ?? undefined }}
+                      />
+                    </div>
+                    <span className="w-16 shrink-0 text-right text-xs font-bold text-slate-400">{count} repo{count > 1 ? 's' : ''}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Activity Section (live from GitHub) */}
+        {!githubError && (
+          <section id="activity">
+            <SectionEyebrow text={t.sectionNum.activity} />
+            <h3 className="text-3xl font-bold text-slate-900 mb-2">{t.titles.activity}</h3>
+            <p className="text-slate-500 text-sm mb-8">{t.activitySubtitle}</p>
+
+            {!repos && (
+              <div className="space-y-3">
+                {[0, 1, 2].map(i => <div key={i} className="h-12 rounded-xl bg-slate-100 animate-pulse" />)}
+              </div>
+            )}
+
+            {repos && (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-100">
+                {recentActivity.map((repo) => (
+                  <a
+                    key={repo.id}
+                    href={repo.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+                  >
+                    <span className="flex items-center gap-3 text-sm font-semibold text-slate-800">
+                      <ActivityIcon size={15} className="text-indigo-600" />
+                      {repo.name}
+                    </span>
+                    <span className="text-xs font-bold text-slate-400">{timeAgo(repo.pushed_at, lang)}</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Contact CTA */}
         <section id="contact" className="bg-slate-900 rounded-3xl p-12 text-center text-white relative overflow-hidden">
           <div className="relative z-10 space-y-6">
             <h3 className="text-3xl font-bold">{t.titles.contact}</h3>
             <p className="text-slate-300 max-w-lg mx-auto">
-              {lang === 'pt' 
-                ? "Estou disponível para novas oportunidades. Vamos construir algo incrível juntos." 
-                : "I am available for new opportunities. Let's build something amazing together."}
+              {lang === 'pt'
+                ? "Estou disponível para novas oportunidades."
+                : "I am available for new opportunities."}
             </p>
             <a href="mailto:joaomigueld3@gmail.com" className="inline-flex items-center gap-2 px-8 py-3 bg-white text-slate-900 rounded-full font-bold hover:bg-indigo-50 transition">
               <Mail size={18} /> joaomigueld3@gmail.com
@@ -334,11 +555,32 @@ export default function Portfolio() {
   );
 }
 
+function SectionEyebrow({ text }: { text: string }) {
+  return (
+    <div className="flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-indigo-600 mb-3">
+      <span className="w-6 h-px bg-indigo-600" /> {text}
+    </div>
+  );
+}
+
+function StatCard({ value, label, loading }: { value?: number; label: string; loading: boolean }) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
+      {loading ? (
+        <div className="h-8 mb-1 rounded bg-slate-100 animate-pulse mx-auto w-12" />
+      ) : (
+        <div className="text-2xl font-extrabold text-indigo-600">{value ?? 0}</div>
+      )}
+      <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</div>
+    </div>
+  );
+}
+
 function SocialBtn({ href, icon, label }: { href: string, icon: React.ReactNode, label: string }) {
   return (
-    <a 
-      href={href} 
-      target="_blank" 
+    <a
+      href={href}
+      target="_blank"
       rel="noopener noreferrer"
       className="p-3 bg-white border border-slate-200 text-slate-600 rounded-full hover:border-indigo-600 hover:text-indigo-600 hover:scale-110 transition-all shadow-sm"
       aria-label={label}
