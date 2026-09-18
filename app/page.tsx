@@ -31,11 +31,22 @@ type GithubRepo = {
   pushed_at: string;
 };
 
+const PINNED_REPOS = [
+  "sorteador-times-app",
+  "ecommerce-chall",
+  "Bee-Social",
+  "vaccination-app-back",
+  "vaccination-app-front",
+  "Sudoku-java",
+];
+
 const STACK_CATEGORIES: { label: string; items: string[] }[] = [
-  { label: "frontend", items: ["React", "TypeScript", "Tailwind"] },
+  { label: "frontend", items: ["React", "Next.js", "Tailwind"] },
   { label: "backend", items: ["NodeJS", "NestJS", "TypeScript"] },
-  { label: "mobile", items: ["Flutter", "Dart"] },
-  { label: "ops", items: ["Docker", "AWS", "Shell"] },
+  { label: "mobile", items: ["React Native"] },
+  { label: "database", items: ["PostgreSQL", "MongoDB", "Redis"] },
+  { label: "devops", items: ["Docker", "AWS", "Google Cloud Platform"] },
+  { label: "ia", items: ["Claude Code", "Codex", "Gemini"] },
 ];
 
 const LANGUAGE_COLORS: Record<string, string> = {
@@ -67,7 +78,6 @@ export default function Portfolio() {
   const [repos, setRepos] = useState<GithubRepo[] | null>(null);
   const [totalContributions, setTotalContributions] = useState<number | null>(null);
   const [githubError, setGithubError] = useState(false);
-  const [projectSort, setProjectSort] = useState<'stars' | 'recent'>('stars');
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -99,15 +109,11 @@ export default function Portfolio() {
 
   const ownRepos = useMemo(() => (repos ?? []).filter(r => !r.fork), [repos]);
 
-  const sortedProjects = useMemo(() => {
-    const list = [...ownRepos];
-    if (projectSort === 'stars') {
-      list.sort((a, b) => b.stargazers_count - a.stargazers_count);
-    } else {
-      list.sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime());
-    }
-    return list.slice(0, 6);
-  }, [ownRepos, projectSort]);
+  const pinnedProjects = useMemo(() => {
+    return PINNED_REPOS
+      .map(name => ownRepos.find(r => r.name === name))
+      .filter((r): r is GithubRepo => r !== undefined);
+  }, [ownRepos]);
 
   const languageStats = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -139,7 +145,7 @@ export default function Portfolio() {
       titles: {
         about: "Sobre Mim",
         edu: "Formação Acadêmica",
-        projects: "Projetos & Autônomo",
+        projects: "Principais Projetos",
         stack: "Stack",
         activity: "Atividade Recente",
         contact: "Vamos Conversar?"
@@ -150,7 +156,6 @@ export default function Portfolio() {
       stackSubtitle: "Distribuição de linguagens direto da API do GitHub.",
       stackCommand: `$ ${GITHUB_USERNAME} --stack`,
       activitySubtitle: "Últimos repositórios atualizados.",
-      sortLabels: { stars: "Mais Estrelados", recent: "Mais Recentes" },
       githubErrorMsg: "Não foi possível carregar os dados do GitHub agora.",
       education: [
         {
@@ -175,7 +180,7 @@ export default function Portfolio() {
       titles: {
         about: "About Me",
         edu: "Education",
-        projects: "Projects & Freelance",
+        projects: "Featured Projects",
         stack: "Stack",
         activity: "Recent Activity",
         contact: "Let's Talk?"
@@ -186,7 +191,6 @@ export default function Portfolio() {
       stackSubtitle: "Language distribution, straight from the GitHub API.",
       stackCommand: `$ ${GITHUB_USERNAME} --stack`,
       activitySubtitle: "Recently pushed repositories.",
-      sortLabels: { stars: "Top Starred", recent: "Most Recent" },
       githubErrorMsg: "Couldn't load GitHub data right now.",
       education: [
         {
@@ -337,23 +341,7 @@ export default function Portfolio() {
         <section id="projects">
         <Reveal>
           <SectionEyebrow text={t.sectionNum.projects} />
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
-            <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{t.titles.projects}</h3>
-            <div className="flex bg-slate-100 dark:bg-zinc-900 rounded-full p-1 text-xs font-bold self-start">
-              <button
-                onClick={() => setProjectSort('stars')}
-                className={`px-4 py-1.5 rounded-full transition-all ${projectSort === 'stars' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-lime-400 shadow-sm' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}
-              >
-                {t.sortLabels.stars}
-              </button>
-              <button
-                onClick={() => setProjectSort('recent')}
-                className={`px-4 py-1.5 rounded-full transition-all ${projectSort === 'recent' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-lime-400 shadow-sm' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}
-              >
-                {t.sortLabels.recent}
-              </button>
-            </div>
-          </div>
+          <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-10">{t.titles.projects}</h3>
 
           {githubError && (
             <p className="text-sm text-slate-400 dark:text-zinc-500 mb-6">{t.githubErrorMsg}</p>
@@ -367,7 +355,7 @@ export default function Portfolio() {
 
           {repos && (
             <div className="grid md:grid-cols-2 gap-6">
-              {sortedProjects.map((repo) => (
+              {pinnedProjects.map((repo) => (
                 <div key={repo.id} className="bg-white dark:bg-zinc-950 rounded-2xl border border-slate-200 dark:border-zinc-800 p-6 transition-all group hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-lime-500/5 dark:hover:border-lime-400/30">
                   <div className="flex justify-between items-start mb-4">
                     <h4 className="text-lg font-bold text-slate-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-lime-400 transition-colors">{repo.name}</h4>
